@@ -7,12 +7,19 @@ export default defineConfig({
     react(),
     viteStaticCopy({
       targets: [
-        { src: 'public/manifest.json', dest: '.' },
-        { src: 'public/*.png', dest: '.' }
+        {
+          src: 'public/*',
+          dest: ''
+        }
       ]
     })
   ],
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: './index.html'
+      }
+    }
   }
 })

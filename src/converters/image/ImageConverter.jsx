@@ -41,6 +41,7 @@ const ImageConverter = () => {
         setIsDragging(false);
     }, []);
 
+    // 修改handleDrop函数支持网页图片
     const handleDrop = useCallback(async (e) => {
         e.preventDefault();
         setIsDragging(false);
@@ -116,13 +117,19 @@ const ImageConverter = () => {
         URL.revokeObjectURL(url);
     };
 
+    // 添加删除文件的处理函数
+    const handleRemoveFile = useCallback((indexToRemove) => {
+        setFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+        setConvertedBlobs(prev => prev.filter((_, index) => index !== indexToRemove));
+    }, []);
+
     // 在组件顶部添加新的状态
     const [activeTab, setActiveTab] = useState('upload');
     const [imageUrls, setImageUrls] = useState('');
     // 添加处理网络图片的函数
     const handleAddUrls = async () => {
         const urls = imageUrls.split('\n').filter(url => url.trim());
-
+        
         try {
             const newFiles = await Promise.all(
                 urls.map(async (url) => {
@@ -131,21 +138,56 @@ const ImageConverter = () => {
                     return new File([blob], url.split('/').pop(), { type: blob.type });
                 })
             );
-
+            
             setFiles(prev => [...prev, ...newFiles]);
             setImageUrls('');
         } catch (error) {
             alert('添加图片URL失败，请确保URL可访问且为图片格式');
         }
-    };    
+    };
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem',
+            }}></div>
             <h2>批量图片格式转换</h2>
+            <button
+                onClick={() => window.close()}
+                style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    color: '#666',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f5f5f5';
+                    e.currentTarget.style.color = '#ff4444';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#666';
+                }}
+            >
+                ✕
+            </button>
 
+            
             {/* 添加Tab切换 */}
             <div style={{ marginBottom: '2rem' }}>
-                <button
+                <button 
                     onClick={() => setActiveTab('upload')}
                     style={{
                         padding: '0.5rem 1rem',
@@ -158,7 +200,7 @@ const ImageConverter = () => {
                 >
                     本地图片
                 </button>
-                <button
+                <button 
                     onClick={() => setActiveTab('url')}
                     style={{
                         padding: '0.5rem 1rem',
@@ -230,7 +272,7 @@ const ImageConverter = () => {
                             }}
                             multiple
                         />
-                        <button
+                        <button 
                             onClick={handleAddUrls}
                             disabled={!imageUrls.trim()}
                             style={{
@@ -318,8 +360,62 @@ const ImageConverter = () => {
                     padding: '1rem'
                 }}>
                     {files.map((file, index) => (
-                        <div key={index} style={{ marginBottom: '0.5rem' }}>
-                            {file.name} ({Math.round(file.size / 1024)}KB)
+                        <div 
+                            key={index} 
+                            style={{ 
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '8px',
+                                borderBottom: '1px solid #eee',
+                                backgroundColor: '#fff',
+                                transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <img 
+                                    src={URL.createObjectURL(file)} 
+                                    alt={file.name}
+                                    style={{ 
+                                        width: '40px', 
+                                        height: '40px', 
+                                        objectFit: 'cover',
+                                        borderRadius: '4px'
+                                    }}
+                                    onLoad={(e) => URL.revokeObjectURL(e.target.src)}
+                                />
+                                <span>{file.name} ({Math.round(file.size / 1024)}KB)</span>
+                            </div>
+                            <button
+                                onClick={() => handleRemoveFile(index)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#ff4444',
+                                    cursor: 'pointer',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '28px',
+                                    height: '28px'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#ffeeee';
+                                    e.currentTarget.style.color = '#ff0000';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#ff4444';
+                                }}
+                                title="删除"
+                            >
+                                ✕
+                            </button>
                         </div>
                     ))}
                 </div>
